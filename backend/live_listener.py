@@ -69,6 +69,17 @@ async def run_listener(
         last_flush = time.monotonic()
         sigs = [s for s, _, _ in group]
         tx_list = [p for _, p, _ in group]
+        # Instant ping: something happened (before AI runs)
+        try:
+            out_queue.put_nowait({
+                "type": "activity_detected",
+                "signatures": sigs,
+                "count": len(tx_list),
+                "wallet": wallet,
+                "just_happened": True,
+            })
+        except asyncio.QueueFull:
+            pass
         try:
             explanation = await loop.run_in_executor(None, lambda: explain_group(tx_list))
             out_queue.put_nowait({

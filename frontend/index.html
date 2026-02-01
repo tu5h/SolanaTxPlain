@@ -402,6 +402,21 @@
       color: var(--success);
       font-size: 0.7rem;
     }
+    .activity-card .time-ago {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .activity-card.explaining .activity-card-body {
+      color: var(--muted);
+      font-style: italic;
+    }
+    .live-countdown {
+      font-size: 0.8rem;
+      color: var(--accent);
+      margin-left: 0.5rem;
+    }
+    .live-countdown.checking { color: var(--success); }
     .activity-card-body { padding: 1rem 1.25rem; }
     .activity-card-body h4 { font-size: 0.75rem; font-weight: 700; color: var(--muted); margin: 0 0 0.35rem 0; text-transform: uppercase; letter-spacing: 0.05em; }
     .activity-card-body p { margin: 0 0 0.75rem 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
@@ -681,33 +696,83 @@
       liveStatusEl.className = 'live-status live';
       var net = (networkLiveEl && networkLiveEl.value) ? networkLiveEl.value : 'mainnet';
       var shortWallet = wallet.length >= 10 ? (wallet.slice(0, 6) + '\u2026' + wallet.slice(-4)) : wallet;
-      liveStatusEl.innerHTML = '<span class="dot"></span> Listening on <strong>' + escapeHtml(net) + '</strong> for ' + escapeHtml(shortWallet) + '. Send a tx from this wallet to see it here.';
+      liveStatusEl.innerHTML = '<span class="dot"></span> Listening on <strong>' + escapeHtml(net) + '</strong> for ' + escapeHtml(shortWallet) + '.<span id="liveCountdown" class="live-countdown"></span>';
+      var liveCountdownEl = document.getElementById('liveCountdown');
       btnLive.style.display = 'none';
       btnStop.style.display = 'inline-block';
       hideSingleTxMessage();
+      var countdownSec = 2;
+      var countdownInterval = setInterval(function() {
+        if (!eventSource || !liveCountdownEl) return;
+        if (net === 'devnet') {
+          if (countdownSec > 0) {
+            liveCountdownEl.textContent = ' \u2022 Next check in ' + countdownSec + 's';
+            liveCountdownEl.classList.remove('checking');
+            countdownSec--;
+          } else {
+            liveCountdownEl.textContent = ' \u2022 Checking\u2026';
+            liveCountdownEl.classList.add('checking');
+            countdownSec = 2;
+          }
+        } else {
+          liveCountdownEl.textContent = ' \u2022 Listening';
+        }
+      }, 1000);
+      if (window._liveCountdownInterval) clearInterval(window._liveCountdownInterval);
+      window._liveCountdownInterval = countdownInterval;
       var url = API_BASE + '/live/stream?wallet=' + encodeURIComponent(wallet) + '&network=' + encodeURIComponent(net);
       eventSource = new EventSource(url);
       eventSource.onmessage = function(e) {
         try {
           var data = JSON.parse(e.data);
-          if (data.type === 'ping') return;
-          if (data.type === 'activity' && data.explanation) {
+          if (data.type === 'ping') {
+            if (net === 'devnet' && liveCountdownEl) { countdownSec = 2; }
+            return;
+          }
+          if (data.type === 'activity_detected') {
             liveFeedEmptyWrap.style.display = 'none';
-            var card = renderActivityCard(data);
-            liveFeedRight.insertBefore(card, liveFeedRight.firstChild);
+            var place = renderPlaceholderCard(data);
+            liveFeedRight.insertBefore(place, liveFeedRight.firstChild);
             liveFeedRightWrap.style.display = 'flex';
             document.body.classList.add('has-result');
+            if (net === 'devnet' && liveCountdownEl) countdownSec = 2;
+          }
+          if (data.type === 'activity' && data.explanation) {
+            liveFeedEmptyWrap.style.display = 'none';
+            var sigs = data.signatures || [];
+            var firstSig = sigs[0];
+            var existing = null;
+            if (firstSig && liveFeedRight) {
+              var cards = liveFeedRight.querySelectorAll('.activity-card[data-activity-id]');
+              for (var i = 0; i < cards.length; i++) {
+                if (cards[i].getAttribute('data-activity-id') === firstSig) { existing = cards[i]; break; }
+              }
+            }
+            var receivedAt = existing ? parseInt(existing.getAttribute('data-received-at'), 10) : Date.now();
+            var card = renderActivityCard(data, receivedAt);
+            if (existing && existing.parentNode) {
+              existing.parentNode.replaceChild(card, existing);
+            } else {
+              liveFeedRight.insertBefore(card, liveFeedRight.firstChild);
+            }
+            liveFeedRightWrap.style.display = 'flex';
+            document.body.classList.add('has-result');
+            if (net === 'devnet' && liveCountdownEl) countdownSec = 2;
           }
         } catch (err) {}
       };
       eventSource.onerror = function() {
-        liveStatusEl.innerHTML = '<span class="dot"></span> Connection error. Reconnecting…';
+        liveStatusEl.innerHTML = '<span class="dot"></span> Connection error. Reconnecting\u2026';
       };
     }
     function stopLive() {
       if (eventSource) {
         eventSource.close();
         eventSource = null;
+      }
+      if (window._liveCountdownInterval) {
+        clearInterval(window._liveCountdownInterval);
+        window._liveCountdownInterval = null;
       }
       btnLive.style.display = 'inline-block';
       btnStop.style.display = 'none';
@@ -717,19 +782,61 @@
     btnLive.addEventListener('click', startLive);
     btnStop.addEventListener('click', stopLive);
 
-    function renderActivityCard(data) {
+    function formatTimeAgo(ms) {
+      var sec = Math.floor((Date.now() - ms) / 1000);
+      if (sec < 5) return 'Just now';
+      if (sec < 60) return sec + 's ago';
+      var min = Math.floor(sec / 60);
+      if (min < 60) return min + 'm ago';
+      var hr = Math.floor(min / 60);
+      if (hr < 24) return hr + 'h ago';
+      return Math.floor(hr / 24) + 'd ago';
+    }
+    function updateAllTimeAgo() {
+      document.querySelectorAll('.activity-card .time-ago').forEach(function(el) {
+        var at = el.getAttribute('data-received-at');
+        if (at) el.textContent = formatTimeAgo(parseInt(at, 10));
+      });
+    }
+    setInterval(updateAllTimeAgo, 1000);
+
+    function renderPlaceholderCard(data) {
+      var sigs = data.signatures || [];
+      var firstSig = sigs[0];
+      var count = data.count || 0;
+      var div = document.createElement('div');
+      div.className = 'activity-card just-happened explaining';
+      div.setAttribute('data-activity-id', firstSig || '');
+      div.setAttribute('data-received-at', String(Date.now()));
+      var html = '';
+      html += '<div class="activity-card-header">';
+      html += '<span class="intent">activity</span>';
+      html += '<span class="time-ago" data-received-at="' + Date.now() + '">Just now</span>';
+      html += '</div>';
+      html += '<div class="activity-card-body">';
+      html += '<p>Something just happened \u2014 generating plain-English explanation\u2026</p>';
+      if (count > 1) html += '<p class="live-feed-troubleshoot">' + count + ' transaction(s) detected.</p>';
+      html += '</div>';
+      div.innerHTML = html;
+      return div;
+    }
+
+    function renderActivityCard(data, receivedAt) {
       var ex = data.explanation || {};
       var count = data.count || 0;
       var sigs = data.signatures || [];
       var firstSig = sigs[0];
+      if (receivedAt == null || receivedAt === undefined) receivedAt = Date.now();
       var div = document.createElement('div');
       div.className = 'activity-card just-happened';
+      div.setAttribute('data-activity-id', firstSig || '');
+      div.setAttribute('data-received-at', String(receivedAt));
       var alertHtml = count > 1 ? '<div class="alert-burst">This action triggered ' + count + ' transaction(s) in under a few seconds — normal on Solana (burst execution, fast finality).</div>' : '';
       var whyMulti = (ex.why_multiple_txs && ex.why_multiple_txs !== '—') ? '<section><h3>Why multiple txs</h3><p class="section-desc">Solana often executes several steps as separate transactions in under a second.</p><p>' + escapeHtml(ex.why_multiple_txs) + '</p></section>' : '';
       var html = '';
       html += '<div class="activity-card-header">';
       html += '<span class="intent">' + escapeHtml(ex.intent || 'unknown') + '</span>';
-      html += '<span class="just-happened-badge">Just happened</span>';
+      html += '<span class="time-ago" data-received-at="' + receivedAt + '">Just now</span>';
       html += '</div>';
       html += '<div class="activity-card-body result-style">';
       html += alertHtml;

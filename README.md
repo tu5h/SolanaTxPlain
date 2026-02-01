@@ -1,7 +1,7 @@
 # SolanaTxPlain — AI-Powered Solana Transaction Explainer
 
 Built for Royal Hackaway v9  
-Sponsor Tracks: Solana + AI + DigitalOcean + OpenRouter
+Sponsor Tracks: Solana + Gemini + OpenRouter
 
 ---
 
