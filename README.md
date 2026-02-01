@@ -1,7 +1,26 @@
 # SolanaTxPlain — AI-Powered Solana Transaction Explainer
 
-Built for Royal Hackaway v9  
-Sponsor Tracks: Solana + Gemini + OpenRouter
+https://devpost.com/software/solanatxplain
+
+**Built for Royal Hackaway v9** · Sponsor Tracks: **Solana** · **Gemini** · **OpenRouter**
+
+---
+
+## ⚡ Try it locally ( — run in ~2 minutes)
+
+1. **Clone and setup** (from project root):
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
+   Copy `.env.example` to `backend/.env` and add your `GEMINI_API_KEY` ([get one](https://aistudio.google.com/apikey)).
+
+2. **Terminal 1 — Backend:** `python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000`
+
+3. **Terminal 2 — Frontend:** `python -m http.server 3000 --directory frontend`
+
+4. Open **http://localhost:3000**. Paste any Solana tx hash (mainnet or devnet) → **Explain**. Or use **Live Activity** with a devnet wallet (see [DEV.md](DEV.md) for devnet setup).
+
+Built locally due to easy testnet capability.
 
 ---
 
@@ -9,18 +28,11 @@ Sponsor Tracks: Solana + Gemini + OpenRouter
 
 SolanaTxPlain is an AI-powered transaction explainer that converts complex Solana blockchain transactions into clear, plain English.
 
-Solana explorers show raw technical data:
-- instruction logs
-- program calls
-- token account changes
-- balance deltas
-- contract interactions
+**Two ways to use it:**
+- **Explain a single transaction** — Paste a tx hash (mainnet or devnet), get a full plain-English breakdown (summary, intent, wallet impact, fees, programs, risk, AI explanation).
+- **Live Activity** — Enter a wallet address, click Start live; we listen for transactions and explain each burst in real time (mainnet or devnet; devnet uses polling so it works without a paid RPC).
 
-This is difficult for normal users to understand.
-
-SolanaTxPlain acts like a **translator layer** between blockchain data and humans.
-
-Users paste a Solana transaction hash → the system fetches the transaction → parses the changes → uses AI to explain what actually happened.
+Solana explorers show raw technical data (instruction logs, program calls, token changes, balance deltas). SolanaTxPlain acts like a **translator layer** between blockchain data and humans.
 
 Think of it as:
 
@@ -34,7 +46,7 @@ Blockchain transparency exists — but **human readability does not**.
 
 Current Solana explorers are built for developers, not everyday users.
 
-Most users cannot answer:
+__Most users cannot answer__:
 - Did I swap tokens or send them?
 - Which app did I interact with?
 - Did I approve something risky?
@@ -75,6 +87,17 @@ Multi-model AI reasoning and fallback.
 
 ## ElevenLabs Track (Optional)
 Voice explanation of transaction summary.
+
+---
+
+# ✨ What we built (highlights)
+
+- **Single-tx explain** — Paste any Solana tx hash (mainnet or devnet); get summary, intent, wallet impact, fees, programs used, risk notes, and a full AI explanation. Optional OpenRouter cross-check.
+- **Live Activity** — Enter a wallet; we listen for transactions and explain each burst in plain English. Instant “something happened” ping, then full AI summary when ready.
+- **Mainnet + Devnet** — Switch network in the UI; devnet uses polling so it works with the public RPC (no paid WebSocket). Perfect for testing with free SOL.
+- **Relative timestamps** — Live cards show “15s ago”, “1m ago” and update every second.
+- **Listening countdown** — On devnet, “Next check in 2s” / “Checking…” so users see the app is still listening.
+- **Two-phase notifications** — You see “Something just happened” immediately, then the same card fills in with the full explanation.
 
 ---
 
@@ -336,9 +359,6 @@ Response JSON
 
 ## Hosting
 - See [DEPLOY.md](DEPLOY.md) for deployment options.
-
-## Optional
-- ElevenLabs voice API
 
 ---
 
