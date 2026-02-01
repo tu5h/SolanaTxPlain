@@ -140,6 +140,9 @@
     .try-it {
       margin-top: 1.5rem;
     }
+    .single-tx-chunk {
+      margin-top: 1.5rem;
+    }
     .try-it .chunk-title { margin-bottom: 1rem; }
     .backend-status { font-size: 0.8125rem; color: var(--muted); margin-bottom: 0.75rem; }
     .backend-status.ok { color: var(--success); }
@@ -210,6 +213,25 @@
     }
     .message.error { background: rgba(248, 81, 73, 0.12); border: 1px solid rgba(248, 81, 73, 0.4); color: #ff7b72; }
     .message.loading { color: var(--muted); border: 1px solid var(--border); }
+    .loading-bar {
+      height: 4px;
+      margin-top: 0.5rem;
+      border-radius: 2px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .loading-bar .loading-bar-fill {
+      height: 100%;
+      width: 35%;
+      background: var(--accent);
+      border-radius: 2px;
+      animation: loadingBar 1.2s ease-in-out infinite;
+    }
+    @keyframes loadingBar {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(250%); }
+      100% { transform: translateX(-100%); }
+    }
 
     /* —— Two-column layout when result is shown —— */
     .main-layout {
@@ -237,6 +259,9 @@
     body.has-result .main-layout .right-col {
       padding-left: 1.5rem;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
     }
     .panel-right {
       opacity: 0;
@@ -245,8 +270,22 @@
     body.has-result .panel-right {
       opacity: 1;
     }
-    body.has-result .panel-right .result {
+    body.has-result .panel-right .result,
+    body.has-result .panel-right .live-feed-right-wrap {
       animation: fadeIn 0.4s ease;
+    }
+    .live-feed-right-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .live-feed-right-wrap .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -323,6 +362,8 @@
     .live-feed-empty p { margin: 0 0 0.75rem 0; }
     .live-feed-empty p:last-child { margin-bottom: 0; }
     .live-feed-troubleshoot { font-size: 0.8125rem; color: var(--muted); margin-top: 1rem !important; }
+    .live-feed-empty-wrap { margin-top: 0.75rem; }
+    .message-live.error { background: rgba(248, 81, 73, 0.12); border: 1px solid rgba(248, 81, 73, 0.4); color: #ff7b72; }
     .activity-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -525,7 +566,7 @@
           <p class="chunk-note">You get real transactions, instant confirmations, and full control — with no mainnet risk.</p>
         </section>
 
-        <section class="chunk try-it" aria-labelledby="try-title">
+        <section class="chunk try-it live-activity-chunk" aria-labelledby="try-title">
           <h2 id="try-title" class="chunk-title">Live Activity</h2>
           <p id="backendStatus" class="backend-status">Backend: checking…</p>
           <div class="input-row">
@@ -546,18 +587,19 @@
             </div>
           </div>
           <p id="liveStatus" class="live-status" style="display: none;"></p>
-          <div id="liveFeed" class="live-feed" style="display: none;">
+          <div id="messageLive" class="message message-live" style="display: none;"></div>
+          <div id="liveFeedEmptyWrap" class="live-feed-empty-wrap" style="display: none;">
             <div id="liveFeedEmpty" class="live-feed-empty">
               <p><strong>Waiting for transactions</strong></p>
               <p>Send SOL (or any tx) <em>from</em> the wallet you entered — e.g. in WSL: <code class="mono-inline">solana transfer &lt;OTHER_PUBKEY&gt; 0.01</code></p>
               <p class="live-feed-troubleshoot">If nothing appears: (1) Select <strong>Devnet</strong> before clicking Start live. (2) Use the same wallet that sends the tx — run <code class="mono-inline">solana address</code> in WSL and paste that pubkey here. (3) Check the terminal where the backend is running for &quot;Buffered tx&quot; when you send.</p>
             </div>
-            <div id="liveFeedCards"></div>
           </div>
-          <div id="message" class="message" style="display: none;"></div>
+        </section>
 
-          <h3 class="chunk-title" style="margin-top: 1.5rem;">Explain a single transaction</h3>
-          <p class="section-desc">Or paste one tx signature to explain it (no live stream). Use the same network as the transaction.</p>
+        <section class="chunk try-it single-tx-chunk" aria-labelledby="single-tx-title">
+          <h2 id="single-tx-title" class="chunk-title">Explain a single transaction</h2>
+          <p class="section-desc">Paste one tx signature to explain it (no live stream). Use the same network as the transaction.</p>
           <div class="input-row">
             <label for="networkHash">Network</label>
             <div class="row-inner row-network">
@@ -577,12 +619,17 @@
           <div class="row-options">
             <label><input type="checkbox" id="simpleMode" checked /> Simple mode (beginner-friendly)</label>
           </div>
+          <div id="messageSingle" class="message single-tx-message" style="display: none;"></div>
+          <div id="loadingBarSingle" class="loading-bar" style="display: none;"><div class="loading-bar-fill"></div></div>
         </section>
       </div>
 
       <div class="right-col panel-right">
         <div id="result" class="result" style="display: none;"></div>
-        <div id="liveFeedRight" class="live-feed" style="display: none;"></div>
+        <div id="liveFeedRightWrap" class="live-feed-right-wrap" style="display: none;">
+          <div class="section-label">Live Activity</div>
+          <div id="liveFeedRight"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -595,17 +642,20 @@
   <script>
     const hashInput = document.getElementById('hash');
     const btn = document.getElementById('btn');
-    const messageEl = document.getElementById('message');
+    const messageSingleEl = document.getElementById('messageSingle');
+    const loadingBarSingleEl = document.getElementById('loadingBarSingle');
     const resultEl = document.getElementById('result');
     const backendStatusEl = document.getElementById('backendStatus');
     const simpleModeCheck = document.getElementById('simpleMode');
     const walletInput = document.getElementById('wallet');
     const btnLive = document.getElementById('btnLive');
     const btnStop = document.getElementById('btnStop');
-    const liveFeed = document.getElementById('liveFeed');
+    const liveFeedEmptyWrap = document.getElementById('liveFeedEmptyWrap');
     const liveFeedEmpty = document.getElementById('liveFeedEmpty');
-    const liveFeedCards = document.getElementById('liveFeedCards');
+    const liveFeedRightWrap = document.getElementById('liveFeedRightWrap');
+    const liveFeedRight = document.getElementById('liveFeedRight');
     const liveStatusEl = document.getElementById('liveStatus');
+    const messageLiveEl = document.getElementById('messageLive');
     const networkLiveEl = document.getElementById('networkLive');
     const networkHashEl = document.getElementById('networkHash');
 
@@ -616,13 +666,17 @@
     function startLive() {
       var wallet = (walletInput.value || '').trim();
       if (!wallet || wallet.length < 32) {
-        showMessage('Please enter a valid Solana wallet address (pubkey).', true);
+        messageLiveEl.style.display = 'block';
+        messageLiveEl.textContent = 'Please enter a valid Solana wallet address (pubkey).';
+        messageLiveEl.className = 'message message-live error';
         return;
       }
       if (eventSource) return;
-      liveFeed.style.display = 'flex';
+      messageLiveEl.style.display = 'none';
+      liveFeedEmptyWrap.style.display = 'block';
       liveFeedEmpty.style.display = 'block';
-      liveFeedCards.innerHTML = '';
+      liveFeedRight.innerHTML = '';
+      liveFeedRightWrap.style.display = 'none';
       liveStatusEl.style.display = 'block';
       liveStatusEl.className = 'live-status live';
       var net = (networkLiveEl && networkLiveEl.value) ? networkLiveEl.value : 'mainnet';
@@ -630,7 +684,7 @@
       liveStatusEl.innerHTML = '<span class="dot"></span> Listening on <strong>' + escapeHtml(net) + '</strong> for ' + escapeHtml(shortWallet) + '. Send a tx from this wallet to see it here.';
       btnLive.style.display = 'none';
       btnStop.style.display = 'inline-block';
-      hideMessage();
+      hideSingleTxMessage();
       var url = API_BASE + '/live/stream?wallet=' + encodeURIComponent(wallet) + '&network=' + encodeURIComponent(net);
       eventSource = new EventSource(url);
       eventSource.onmessage = function(e) {
@@ -638,9 +692,10 @@
           var data = JSON.parse(e.data);
           if (data.type === 'ping') return;
           if (data.type === 'activity' && data.explanation) {
-            liveFeedEmpty.style.display = 'none';
+            liveFeedEmptyWrap.style.display = 'none';
             var card = renderActivityCard(data);
-            liveFeedCards.insertBefore(card, liveFeedCards.firstChild);
+            liveFeedRight.insertBefore(card, liveFeedRight.firstChild);
+            liveFeedRightWrap.style.display = 'flex';
             document.body.classList.add('has-result');
           }
         } catch (err) {}
@@ -657,6 +712,7 @@
       btnLive.style.display = 'inline-block';
       btnStop.style.display = 'none';
       liveStatusEl.style.display = 'none';
+      liveFeedEmptyWrap.style.display = 'none';
     }
     btnLive.addEventListener('click', startLive);
     btnStop.addEventListener('click', stopLive);
@@ -714,12 +770,26 @@
         });
     })();
 
-    function showMessage(text, isError) {
-      messageEl.style.display = 'block';
-      messageEl.textContent = text;
-      messageEl.className = 'message' + (isError ? ' error' : ' loading');
+    function showSingleTxMessage(text, isError) {
+      messageSingleEl.style.display = 'block';
+      messageSingleEl.textContent = text;
+      messageSingleEl.className = 'message single-tx-message' + (isError ? ' error' : ' loading');
     }
-    function hideMessage() { messageEl.style.display = 'none'; }
+    function hideSingleTxMessage() {
+      messageSingleEl.style.display = 'none';
+      loadingBarSingleEl.style.display = 'none';
+    }
+    function showSingleTxLoading(show) {
+      if (show) {
+        messageSingleEl.style.display = 'block';
+        messageSingleEl.textContent = 'Fetching transaction and generating explanation…';
+        messageSingleEl.className = 'message single-tx-message loading';
+        loadingBarSingleEl.style.display = 'block';
+      } else {
+        messageSingleEl.style.display = 'none';
+        loadingBarSingleEl.style.display = 'none';
+      }
+    }
 
     function escapeHtml(s) {
       const div = document.createElement('div');
@@ -803,15 +873,14 @@
       const txHash = hashInput.value.trim();
       lastTxHash = txHash;
       if (!txHash) {
-        showMessage('Please enter a transaction hash.', true);
+        showSingleTxMessage('Please enter a transaction hash.', true);
         return;
       }
       inProgress = true;
-      hideMessage();
+      hideSingleTxMessage();
       resultEl.style.display = 'none';
-      document.body.classList.remove('has-result');
       btn.disabled = true;
-      showMessage('Fetching transaction and generating explanation…');
+      showSingleTxLoading(true);
 
       try {
         const res = await fetch(API_BASE + '/explain', {
@@ -823,13 +892,17 @@
 
         if (!res.ok) {
           const detail = Array.isArray(data.detail) ? data.detail.join(' ') : (data.detail || res.statusText);
-          showMessage(detail, true);
+          showSingleTxLoading(false);
+          showSingleTxMessage(detail, true);
           return;
         }
-        hideMessage();
+        hideSingleTxMessage();
+        document.body.classList.add('has-result');
+        resultEl.style.display = 'block';
         showResult(data);
       } catch (err) {
-        showMessage('Network error: ' + (err.message || 'Could not reach server.'), true);
+        showSingleTxLoading(false);
+        showSingleTxMessage('Network error: ' + (err.message || 'Could not reach server.'), true);
       } finally {
         btn.disabled = false;
         inProgress = false;
