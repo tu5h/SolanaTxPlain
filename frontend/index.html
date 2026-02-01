@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SolanaTxPlain — Explain any Solana transaction</title>
+  <title>SolanaTxPlain — Live Solana activity explainer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -169,6 +169,20 @@
     .row-options { margin-top: 0.5rem; }
     .row-options label { font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
     input[type="checkbox"] { accent-color: var(--accent); }
+    select {
+      padding: 0.75rem 1rem;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      min-width: 140px;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+    .chunk code.mono-inline, .chunk .mono-inline { font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; background: var(--bg-elevated); padding: 0.2rem 0.4rem; border-radius: 4px; color: var(--accent); }
+    .chunk-note { font-size: 0.875rem; color: var(--muted); margin-top: 1rem; margin-bottom: 0; font-style: italic; }
     button {
       padding: 0.75rem 1.25rem;
       font-family: inherit;
@@ -291,6 +305,98 @@
     .result section.openrouter-crosscheck p { margin-bottom: 0.75rem; }
     .result section.openrouter-crosscheck p:last-child { margin-bottom: 0; }
 
+    /* —— Live Activity feed —— */
+    .live-feed {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .live-feed-empty {
+      padding: 1.5rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+    }
+    .live-feed-empty p { margin: 0 0 0.75rem 0; }
+    .live-feed-empty p:last-child { margin-bottom: 0; }
+    .live-feed-troubleshoot { font-size: 0.8125rem; color: var(--muted); margin-top: 1rem !important; }
+    .activity-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--accent);
+    }
+    .activity-card.just-happened { border-left-color: var(--success); animation: cardIn 0.4s ease; }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .activity-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .activity-card .label-badge,
+    .activity-card .intent {
+      display: inline-block;
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 600;
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+    .activity-card .just-happened-badge {
+      background: rgba(63, 185, 80, 0.2);
+      color: var(--success);
+      font-size: 0.7rem;
+    }
+    .activity-card-body { padding: 1rem 1.25rem; }
+    .activity-card-body h4 { font-size: 0.75rem; font-weight: 700; color: var(--muted); margin: 0 0 0.35rem 0; text-transform: uppercase; letter-spacing: 0.05em; }
+    .activity-card-body p { margin: 0 0 0.75rem 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
+    .activity-card-body p:last-child { margin-bottom: 0; }
+    .activity-card-body .solana-note { color: var(--accent); font-size: 0.85rem; }
+    .activity-card-body .unusual { color: var(--warning); }
+    /* Full plain-English layout (same as single-tx result) */
+    .activity-card-body.result-style section { padding: 0.75rem 0; border-bottom: 1px solid var(--border-subtle); }
+    .activity-card-body.result-style section:last-child { border-bottom: none; }
+    .activity-card-body.result-style h3 { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: var(--muted); margin: 0 0 0.35rem 0; }
+    .activity-card-body.result-style .section-desc { font-size: 0.8125rem; color: var(--muted); margin: 0 0 0.5rem 0; line-height: 1.4; }
+    .activity-card-body.result-style .summary { font-size: 1rem; font-weight: 600; color: var(--text); }
+    .activity-card-body.result-style .risk { color: var(--warning); }
+    .activity-card-body.result-style .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; color: var(--text-secondary); }
+    .activity-card-links { padding: 0.5rem 1rem; border-top: 1px solid var(--border-subtle); font-size: 0.8rem; }
+    .activity-card-links a { color: var(--accent); text-decoration: none; margin-right: 0.75rem; }
+    .activity-card-links a:hover { text-decoration: underline; }
+    .activity-card-links .muted { color: var(--muted); font-size: 0.8rem; }
+    .live-status {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .live-status.live { color: var(--success); }
+    .live-status .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 0.35rem; animation: pulse 1.5s ease infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .alert-burst {
+      padding: 0.5rem 0.75rem;
+      background: rgba(210, 153, 34, 0.15);
+      border: 1px solid rgba(210, 153, 34, 0.4);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      color: var(--warning);
+      margin-bottom: 0.75rem;
+    }
+
     /* —— Footer —— */
     .page-footer {
       display: flex;
@@ -336,7 +442,7 @@
     <div class="hero-inner">
       <img src="logo.png" alt="SolanaTxPlain" class="logo" />
       <h1>SolanaTxPlain</h1>
-      <p class="tagline">Turn any Solana transaction into plain English — summary, wallet impact, fees, and risk.</p>
+      <p class="tagline">Real-time Solana activity explainer — enter a wallet, perform actions, see what just happened in plain English.</p>
     </div>
   </header>
 
@@ -345,8 +451,8 @@
       <div class="left-col">
         <section class="chunk" aria-labelledby="about-title">
           <h2 id="about-title" class="chunk-title">About</h2>
-          <p><strong>SolanaTxPlain</strong> is an AI-powered explainer for Solana transactions. Explorers show raw data — logs, program IDs, balance deltas — which is hard to read. We fetch the transaction, parse it, and use AI to describe what actually happened in simple language.</p>
-          <p>You get a short summary, wallet impact (what went in and out), fees, programs used, and risk notes. Built for wallet users, beginners, and anyone who wants to understand a tx without reading the chain.</p>
+          <p><strong>SolanaTxPlain</strong> is a real-time Solana activity explainer. Instead of pasting one transaction, you enter a wallet address. We listen to live Solana transactions for that wallet, group bursts (1–3 seconds) into a single action, and use AI to explain what just happened in plain English.</p>
+          <p>Solana produces many transactions in milliseconds. We translate that fast, noisy activity into one human-readable story per burst — with fees, outcome, and why multiple txs are normal on Solana (fast finality, low fees).</p>
         </section>
 
         <section class="chunk" aria-labelledby="how-title">
@@ -355,46 +461,128 @@
             <div class="step">
               <span class="step-num">1</span>
               <div class="step-content">
-                <strong>Paste a transaction hash</strong>
-                <p>Copy the signature from Solscan, your wallet, or any Solana explorer (mainnet).</p>
+                <strong>Choose network</strong>
+                <p>Pick Mainnet (real SOL) or Devnet (test SOL). Devnet is free and perfect for trying the app.</p>
               </div>
             </div>
             <div class="step">
               <span class="step-num">2</span>
               <div class="step-content">
-                <strong>Click Explain</strong>
-                <p>We fetch the tx from the chain and send a structured summary to the AI.</p>
+                <strong>Enter a wallet address</strong>
+                <p>Paste a Solana public key. This is the wallet whose activity we'll explain.</p>
               </div>
             </div>
             <div class="step">
               <span class="step-num">3</span>
               <div class="step-content">
-                <strong>Read the explanation</strong>
-                <p>Check summary, wallet impact, fees, programs used, and risk notes in plain English.</p>
+                <strong>Click Start live</strong>
+                <p>We subscribe to Solana and listen for transactions that mention this wallet.</p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">4</span>
+              <div class="step-content">
+                <strong>Perform actions → see explanations</strong>
+                <p>Send SOL, swap tokens, mint an NFT, etc. Explanations appear in the Live Activity feed as txs finalize.</p>
               </div>
             </div>
           </div>
         </section>
 
+        <section class="chunk" aria-labelledby="devnet-title">
+          <h2 id="devnet-title" class="chunk-title">Use Solana Devnet (perfect for testing)</h2>
+          <p>Devnet gives you free test SOL and real transactions so you can try Live Activity without spending real funds.</p>
+          <div class="steps">
+            <div class="step">
+              <span class="step-num">1</span>
+              <div class="step-content">
+                <strong>Switch to Devnet</strong>
+                <p>Select <strong>Devnet</strong> in the network dropdown below. We use RPC: <code class="mono-inline">https://api.devnet.solana.com</code></p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">2</span>
+              <div class="step-content">
+                <strong>Create a test wallet</strong>
+                <p>Run <code class="mono-inline">solana-keygen new</code>. You get a pubkey and a private key (keep it local).</p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">3</span>
+              <div class="step-content">
+                <strong>Get free SOL</strong>
+                <p>Run <code class="mono-inline">solana airdrop 2</code> (with Solana CLI configured for devnet).</p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">4</span>
+              <div class="step-content">
+                <strong>Generate activity</strong>
+                <p>Send SOL: <code class="mono-inline">solana transfer &lt;OTHER_PUBKEY&gt; 0.01</code>. Your app listens and explains in real time.</p>
+              </div>
+            </div>
+          </div>
+          <p class="chunk-note">You get real transactions, instant confirmations, and full control — with no mainnet risk.</p>
+        </section>
+
         <section class="chunk try-it" aria-labelledby="try-title">
-          <h2 id="try-title" class="chunk-title">Try it</h2>
+          <h2 id="try-title" class="chunk-title">Live Activity</h2>
           <p id="backendStatus" class="backend-status">Backend: checking…</p>
+          <div class="input-row">
+            <label for="networkLive">Network</label>
+            <div class="row-inner row-network">
+              <select id="networkLive" aria-label="Network for live activity">
+                <option value="mainnet">Mainnet</option>
+                <option value="devnet">Devnet</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-row">
+            <label for="wallet">Wallet address (Solana pubkey)</label>
+            <div class="row-inner">
+              <input type="text" id="wallet" placeholder="Paste wallet pubkey…" autocomplete="off" />
+              <button type="button" id="btnLive">Start live</button>
+              <button type="button" id="btnStop" style="display: none;">Stop</button>
+            </div>
+          </div>
+          <p id="liveStatus" class="live-status" style="display: none;"></p>
+          <div id="liveFeed" class="live-feed" style="display: none;">
+            <div id="liveFeedEmpty" class="live-feed-empty">
+              <p><strong>Waiting for transactions</strong></p>
+              <p>Send SOL (or any tx) <em>from</em> the wallet you entered — e.g. in WSL: <code class="mono-inline">solana transfer &lt;OTHER_PUBKEY&gt; 0.01</code></p>
+              <p class="live-feed-troubleshoot">If nothing appears: (1) Select <strong>Devnet</strong> before clicking Start live. (2) Use the same wallet that sends the tx — run <code class="mono-inline">solana address</code> in WSL and paste that pubkey here. (3) Check the terminal where the backend is running for &quot;Buffered tx&quot; when you send.</p>
+            </div>
+            <div id="liveFeedCards"></div>
+          </div>
+          <div id="message" class="message" style="display: none;"></div>
+
+          <h3 class="chunk-title" style="margin-top: 1.5rem;">Explain a single transaction</h3>
+          <p class="section-desc">Or paste one tx signature to explain it (no live stream). Use the same network as the transaction.</p>
+          <div class="input-row">
+            <label for="networkHash">Network</label>
+            <div class="row-inner row-network">
+              <select id="networkHash" aria-label="Network for transaction hash">
+                <option value="mainnet">Mainnet</option>
+                <option value="devnet">Devnet</option>
+              </select>
+            </div>
+          </div>
           <div class="input-row">
             <label for="hash">Transaction hash</label>
             <div class="row-inner">
-              <input type="text" id="hash" placeholder="Paste mainnet tx signature…" autocomplete="off" />
+              <input type="text" id="hash" placeholder="Paste tx signature (mainnet or devnet)…" autocomplete="off" />
               <button type="button" id="btn">Explain</button>
             </div>
           </div>
           <div class="row-options">
             <label><input type="checkbox" id="simpleMode" checked /> Simple mode (beginner-friendly)</label>
           </div>
-          <div id="message" class="message" style="display: none;"></div>
         </section>
       </div>
 
       <div class="right-col panel-right">
         <div id="result" class="result" style="display: none;"></div>
+        <div id="liveFeedRight" class="live-feed" style="display: none;"></div>
       </div>
     </div>
   </div>
@@ -411,9 +599,103 @@
     const resultEl = document.getElementById('result');
     const backendStatusEl = document.getElementById('backendStatus');
     const simpleModeCheck = document.getElementById('simpleMode');
+    const walletInput = document.getElementById('wallet');
+    const btnLive = document.getElementById('btnLive');
+    const btnStop = document.getElementById('btnStop');
+    const liveFeed = document.getElementById('liveFeed');
+    const liveFeedEmpty = document.getElementById('liveFeedEmpty');
+    const liveFeedCards = document.getElementById('liveFeedCards');
+    const liveStatusEl = document.getElementById('liveStatus');
+    const networkLiveEl = document.getElementById('networkLive');
+    const networkHashEl = document.getElementById('networkHash');
 
     const port = window.location.port || '';
     const API_BASE = (port === '3000' || port === '5173') ? 'http://localhost:8000' : window.location.origin;
+
+    var eventSource = null;
+    function startLive() {
+      var wallet = (walletInput.value || '').trim();
+      if (!wallet || wallet.length < 32) {
+        showMessage('Please enter a valid Solana wallet address (pubkey).', true);
+        return;
+      }
+      if (eventSource) return;
+      liveFeed.style.display = 'flex';
+      liveFeedEmpty.style.display = 'block';
+      liveFeedCards.innerHTML = '';
+      liveStatusEl.style.display = 'block';
+      liveStatusEl.className = 'live-status live';
+      var net = (networkLiveEl && networkLiveEl.value) ? networkLiveEl.value : 'mainnet';
+      var shortWallet = wallet.length >= 10 ? (wallet.slice(0, 6) + '\u2026' + wallet.slice(-4)) : wallet;
+      liveStatusEl.innerHTML = '<span class="dot"></span> Listening on <strong>' + escapeHtml(net) + '</strong> for ' + escapeHtml(shortWallet) + '. Send a tx from this wallet to see it here.';
+      btnLive.style.display = 'none';
+      btnStop.style.display = 'inline-block';
+      hideMessage();
+      var url = API_BASE + '/live/stream?wallet=' + encodeURIComponent(wallet) + '&network=' + encodeURIComponent(net);
+      eventSource = new EventSource(url);
+      eventSource.onmessage = function(e) {
+        try {
+          var data = JSON.parse(e.data);
+          if (data.type === 'ping') return;
+          if (data.type === 'activity' && data.explanation) {
+            liveFeedEmpty.style.display = 'none';
+            var card = renderActivityCard(data);
+            liveFeedCards.insertBefore(card, liveFeedCards.firstChild);
+            document.body.classList.add('has-result');
+          }
+        } catch (err) {}
+      };
+      eventSource.onerror = function() {
+        liveStatusEl.innerHTML = '<span class="dot"></span> Connection error. Reconnecting…';
+      };
+    }
+    function stopLive() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      btnLive.style.display = 'inline-block';
+      btnStop.style.display = 'none';
+      liveStatusEl.style.display = 'none';
+    }
+    btnLive.addEventListener('click', startLive);
+    btnStop.addEventListener('click', stopLive);
+
+    function renderActivityCard(data) {
+      var ex = data.explanation || {};
+      var count = data.count || 0;
+      var sigs = data.signatures || [];
+      var firstSig = sigs[0];
+      var div = document.createElement('div');
+      div.className = 'activity-card just-happened';
+      var alertHtml = count > 1 ? '<div class="alert-burst">This action triggered ' + count + ' transaction(s) in under a few seconds — normal on Solana (burst execution, fast finality).</div>' : '';
+      var whyMulti = (ex.why_multiple_txs && ex.why_multiple_txs !== '—') ? '<section><h3>Why multiple txs</h3><p class="section-desc">Solana often executes several steps as separate transactions in under a second.</p><p>' + escapeHtml(ex.why_multiple_txs) + '</p></section>' : '';
+      var html = '';
+      html += '<div class="activity-card-header">';
+      html += '<span class="intent">' + escapeHtml(ex.intent || 'unknown') + '</span>';
+      html += '<span class="just-happened-badge">Just happened</span>';
+      html += '</div>';
+      html += '<div class="activity-card-body result-style">';
+      html += alertHtml;
+      html += '<section><h3>Summary</h3><p class="section-desc">What this activity did.</p><p class="summary">' + escapeHtml(ex.summary || '—') + '</p></section>';
+      html += '<section><h3>Wallet impact</h3><p class="section-desc">How SOL and token balances changed.</p><p>' + escapeHtml(ex.wallet_impact || '—') + '</p></section>';
+      html += '<section><h3>Fees</h3><p class="section-desc">Network fees paid.</p><p class="mono">' + escapeHtml(ex.fees || '—') + '</p></section>';
+      html += '<section><h3>Programs used</h3><p class="section-desc">On-chain programs involved.</p><p>' + escapeHtml(ex.programs_used || '—') + '</p></section>';
+      html += '<section><h3>Risk notes</h3><p class="section-desc">Anything unusual or worth double-checking.</p><p class="risk">' + escapeHtml(ex.risk || 'No suspicious activity.') + '</p></section>';
+      if (whyMulti) html += whyMulti;
+      html += '<section><h3>AI explanation</h3><p class="section-desc">Full plain-English breakdown of what happened.</p><p>' + escapeHtml(ex.explanation || '—') + '</p></section>';
+      html += '</div>';
+      if (firstSig) {
+        var net = data.network || 'mainnet';
+        var solscanHref = 'https://solscan.io/tx/' + encodeURIComponent(firstSig) + (net === 'devnet' ? '?cluster=devnet' : '');
+        html += '<div class="activity-card-links">';
+        html += '<a href="' + escapeHtml(solscanHref) + '" target="_blank" rel="noopener">View on Solscan</a>';
+        if (sigs.length > 1) html += ' <span class="muted">(' + sigs.length + ' txs)</span>';
+        html += '</div>';
+      }
+      div.innerHTML = html;
+      return div;
+    }
 
     (function checkBackend() {
       if (!window.location.origin || window.location.origin === 'null' || window.location.origin.startsWith('file://')) {
@@ -472,7 +754,8 @@
           if (ft) html += '<span>Time: ' + escapeHtml(ft) + '</span>';
         }
         if (lastTxHash) {
-          var solscanUrl = 'https://solscan.io/tx/' + encodeURIComponent(lastTxHash);
+          var net = data.network || 'mainnet';
+          var solscanUrl = 'https://solscan.io/tx/' + encodeURIComponent(lastTxHash) + (net === 'devnet' ? '?cluster=devnet' : '');
           html += '<span><a href="' + escapeHtml(solscanUrl) + '" target="_blank" rel="noopener">View on Solscan</a></span>';
         }
         html += '</p></section>';
@@ -534,7 +817,7 @@
         const res = await fetch(API_BASE + '/explain', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tx_hash: txHash, simple_mode: simpleModeCheck.checked }),
+          body: JSON.stringify({ tx_hash: txHash, simple_mode: simpleModeCheck.checked, network: (networkHashEl && networkHashEl.value) ? networkHashEl.value : 'mainnet' }),
         });
         const data = await res.json().catch(function() { return {}; });
 

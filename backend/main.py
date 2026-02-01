@@ -1,8 +1,11 @@
 """
 SolanaTxPlain API (README).
-POST /explain → { tx_hash } → { summary, intent, wallet_changes, fees, risk_flags, explanation }
+- POST /explain → single tx explanation (legacy).
+- GET /live/stream?wallet=xxx → SSE stream of live activity (grouped txs + AI).
 """
 
+import asyncio
+import json
 import logging
 import os
 from pathlib import Path
@@ -29,12 +32,13 @@ if os.environ.get("OPENROUTER_API_KEY"):
 else:
     log.warning("OPENROUTER_API_KEY not set — add to backend/.env for fallback")
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
 from backend.ai_explain import get_explanation
+from backend.live_listener import run_listener
 from backend.parser import parse_tx
 from backend.solana_client import get_transaction
 
@@ -54,7 +58,8 @@ def root():
     return HTMLResponse(
         "<h1>SolanaTxPlain API</h1>"
         "<p><a href='/docs'>/docs</a> · <a href='/health'>/health</a> · <a href='/debug'>/debug</a></p>"
-        "<p>POST /explain with body: { \"tx_hash\": \"...\" }</p>"
+        "<p>Live: GET <a href='/live/stream'>/live/stream?wallet=YOUR_PUBKEY</a> (SSE)</p>"
+        "<p>Single tx: POST /explain with body: { \"tx_hash\": \"...\" }</p>"
     )
 
 
@@ -84,6 +89,56 @@ def debug():
 class ExplainRequest(BaseModel):
     tx_hash: str
     simple_mode: bool = True  # README Feature 8: Simple vs Technical mode
+    network: str = "mainnet"  # mainnet | devnet
+
+
+@app.get("/live/stream")
+async def live_stream(request: Request, wallet: str = "", network: str = "mainnet"):
+    """
+    SSE stream of live Solana activity for a wallet.
+    Query: ?wallet=YOUR_PUBKEY&network=mainnet|devnet. Groups txs within ~2.5s, explains via AI, pushes events.
+    """
+    wallet = (wallet or "").strip()
+    network = (network or "mainnet").strip().lower() or "mainnet"
+    if network not in ("mainnet", "devnet"):
+        network = "mainnet"
+    if not wallet or len(wallet) < 32:
+        raise HTTPException(status_code=400, detail="Query param 'wallet' (Solana pubkey) is required.")
+    stop = asyncio.Event()
+    queue: asyncio.Queue = asyncio.Queue(maxsize=64)
+
+    async def event_gen():
+        task = asyncio.create_task(run_listener(wallet, queue, network=network, stop=stop))
+        try:
+            while True:
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=25.0)
+                except asyncio.TimeoutError:
+                    yield "data: {\"type\":\"ping\"}\n\n"
+                    continue
+                payload = {
+                    "type": event.get("type"),
+                    "signatures": event.get("signatures", []),
+                    "count": event.get("count", 0),
+                    "wallet": event.get("wallet", ""),
+                    "explanation": event.get("explanation", {}),
+                    "just_happened": event.get("just_happened", False),
+                    "network": network,
+                }
+                yield f"data: {json.dumps(payload)}\n\n"
+        finally:
+            stop.set()
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    return StreamingResponse(
+        event_gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.post("/explain")
@@ -91,8 +146,11 @@ async def explain(req: ExplainRequest):
     tx_hash = (req.tx_hash or "").strip()
     if not tx_hash:
         raise HTTPException(status_code=400, detail="tx_hash is required")
+    network = (req.network or "mainnet").strip().lower() or "mainnet"
+    if network not in ("mainnet", "devnet"):
+        network = "mainnet"
 
-    raw = await get_transaction(tx_hash)
+    raw = await get_transaction(tx_hash, network=network)
     if not raw:
         raise HTTPException(status_code=404, detail="Transaction not found.")
 
@@ -107,6 +165,7 @@ async def explain(req: ExplainRequest):
 
     # README API output + openrouter cross-check when both Gemini and OpenRouter ran
     out = {
+        "network": network,
         "summary": ai["summary"],
         "intent": ai["intent"],
         "wallet_changes": {

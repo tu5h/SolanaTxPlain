@@ -6,6 +6,7 @@ AI layer (README: Features 3–4, 6–7).
 - OpenRouter: cross-check and fallback (Feature 7)
 """
 
+import json
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -126,6 +127,144 @@ def _add_risk_flags(out: dict[str, Any]) -> None:
         if risk_text and risk_text.lower() not in ("none.", "no suspicious activity.", "—")
         else []
     )
+
+
+# —— Live activity: explain a group of txs (1–3s burst) — same sections as single-tx ——
+LIVE_LABELS = (
+    "SUMMARY",
+    "INTENT",
+    "WALLET_IMPACT",
+    "FEES",
+    "PROGRAMS_USED",
+    "RISK",
+    "WHY_MULTIPLE_TXS",  # only when multiple txs
+    "EXPLANATION",
+)
+
+
+def explain_group(transactions: list[dict[str, Any]]) -> dict[str, Any]:
+    """
+    Explain a group of transactions that occurred within 1–3 seconds (one user action).
+    Returns the same shape as single-tx: summary, intent, wallet_impact, fees, programs_used, risk, explanation;
+    plus why_multiple_txs when there are multiple transactions.
+    """
+    api_key = os.environ.get("GEMINI_API_KEY") or ""
+    if not api_key.strip():
+        return _live_fallback("GEMINI_API_KEY not set.")
+    genai.configure(api_key=api_key.strip())
+    model = genai.GenerativeModel(os.environ.get("GEMINI_MODEL", "gemini-2.0-flash"))
+    prompt = _build_live_prompt(transactions)
+    try:
+        response = model.generate_content(prompt)
+        if not response.candidates:
+            return _live_fallback("No content from model.")
+        text = (response.text or "").strip()
+        if not text:
+            return _live_fallback("Empty response.")
+        return _parse_live_response(text)
+    except Exception as e:
+        log.warning("explain_group error: %s", e)
+        return _live_fallback(str(e)[:200])
+
+
+def _live_fallback(msg: str) -> dict[str, Any]:
+    return {
+        "summary": "Explanation unavailable.",
+        "intent": "unknown",
+        "wallet_impact": "—",
+        "fees": "—",
+        "programs_used": "—",
+        "risk": "No suspicious activity.",
+        "why_multiple_txs": "—",
+        "explanation": msg,
+        "error": msg,
+    }
+
+
+def _build_live_prompt(transactions: list[dict[str, Any]]) -> str:
+    tx_summaries = []
+    total_fee = 0.0
+    for i, tx in enumerate(transactions[:10]):  # cap for token size
+        t = {k: v for k, v in tx.items() if k not in ("_raw", "log_preview")}
+        t["log_preview"] = (tx.get("log_preview") or "")[:400]
+        total_fee += float(tx.get("fee_paid") or 0)
+        try:
+            tx_summaries.append(f"--- Tx {i+1} ---\n{json.dumps(t, default=str)}")
+        except (TypeError, ValueError):
+            tx_summaries.append(f"--- Tx {i+1} --- (parse error)")
+    blocks = "\n\n".join(tx_summaries)
+    multi = len(transactions) > 1
+    why_section = (
+        "\nWHY_MULTIPLE_TXS: [Why did multiple transactions occur? E.g. 'Solana executed several steps (approve, swap, settle) as separate txs in under 2 seconds.' One or two sentences.]"
+        if multi
+        else ""
+    )
+    return f"""You are explaining a burst of Solana transactions that just happened for one wallet (within 1–3 seconds). Use the same level of detail as a single-transaction explainer: full plain-English so the user fully understands what happened. Your job is to turn this burst into one human-readable story with the same sections as a hash-based explanation.
+
+Reply with exactly these section headers and content. You may use multiple lines per section. Be thorough but clear.
+
+SUMMARY: [Write 2–4 sentences. Describe what this activity did in plain English: who was involved, what moved (SOL or tokens), and what the outcome was. Add context so a non-technical reader fully understands.]
+INTENT: [Exactly one of: SOL transfer, token swap, NFT mint, liquidity add/remove, staking, contract interaction, token transfer, unknown]
+WALLET_IMPACT: [Describe what changed: SOL and/or token amounts per account. Be clear about sender vs receiver and any token names or amounts.]
+FEES: [What was paid in SOL across these transactions and what it was for (e.g. "~0.0005 SOL total as network fees.").]
+PROGRAMS_USED: [Which on-chain programs or apps were used. Name them in plain English and briefly what they did if relevant.]
+RISK: [One or two sentences: anything risky, unusual, or worth double-checking. If nothing stands out, say "No suspicious activity."]{why_section}
+EXPLANATION: [Write 3–6 sentences (or a short paragraph). Explain what happened step by step in plain English: what the user or contract did, how funds or tokens moved, why the fee or programs were involved, and what the user can infer. If multiple txs occurred, mention that Solana often executes many steps in under a second (fast finality, low fees) and that this is normal.]
+
+Group of {len(transactions)} transaction(s) (total fee ~{total_fee:.6f} SOL):
+{blocks}
+
+Reply with only the sectioned response. Use the exact section labels above. Content for SUMMARY and EXPLANATION should be longer and more detailed."""
+
+
+def _parse_live_response(text: str) -> dict[str, Any]:
+    key_map = {
+        "SUMMARY": "summary",
+        "INTENT": "intent",
+        "WALLET_IMPACT": "wallet_impact",
+        "FEES": "fees",
+        "PROGRAMS_USED": "programs_used",
+        "RISK": "risk",
+        "WHY_MULTIPLE_TXS": "why_multiple_txs",
+        "EXPLANATION": "explanation",
+    }
+    out = {
+        "summary": "No summary.",
+        "intent": "unknown",
+        "wallet_impact": "—",
+        "fees": "—",
+        "programs_used": "—",
+        "risk": "No suspicious activity.",
+        "why_multiple_txs": "—",
+        "explanation": "—",
+    }
+    current_key: str | None = None
+    lines: list[str] = []
+    for line in text.split("\n"):
+        line = line.strip()
+        if not line:
+            if current_key:
+                lines.append("")
+            continue
+        matched = False
+        for lbl in LIVE_LABELS:
+            if line.upper().startswith(lbl + ":"):
+                if current_key and current_key in out:
+                    val = " ".join(lines).strip()
+                    if val:
+                        out[current_key] = val
+                current_key = key_map.get(lbl, lbl.lower().replace(" ", "_"))
+                rest = line[len(lbl) + 1:].strip()
+                lines = [rest] if rest else []
+                matched = True
+                break
+        if not matched and current_key:
+            lines.append(line)
+    if current_key and current_key in out:
+        val = " ".join(lines).strip()
+        if val:
+            out[current_key] = val
+    return out
 
 
 def _call_openrouter(prompt: str) -> tuple[dict[str, Any] | None, str | None]:
