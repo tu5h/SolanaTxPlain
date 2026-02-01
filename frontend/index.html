@@ -6,20 +6,29 @@
   <title>SolanaTxPlain — Explain any Solana transaction</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0d1117;
+      --bg: #0a0e14;
+      --bg-elevated: #0d1117;
       --surface: #161b22;
+      --surface-hover: #1c2128;
       --border: #30363d;
+      --border-subtle: #21262d;
       --text: #e6edf3;
+      --text-secondary: #b1bac4;
       --muted: #8b949e;
       --accent: #58a6ff;
+      --accent-dim: rgba(88, 166, 255, 0.15);
       --success: #3fb950;
       --warning: #d29922;
       --error: #f85149;
-      --left-col-width: 320px;
+      --left-col-width: 340px;
       --transition-dur: 0.35s;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.25);
     }
     * { box-sizing: border-box; }
     body {
@@ -28,50 +37,194 @@
       font-family: 'DM Sans', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .page-header {
+    /* —— Hero —— */
+    .hero {
+      padding: 2.5rem 1.5rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-subtle);
+      background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg) 100%);
+    }
+    .hero-inner {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .hero .logo {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-size: 1.875rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.02em;
+    }
+    .hero .tagline {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin: 0;
+      font-weight: 500;
+    }
+
+    /* —— Main content wrapper —— */
+    .content {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem 2rem;
+    }
+
+    /* —— Chunk / Card —— */
+    .chunk {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-top: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .chunk-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 0.75rem 0;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .chunk p {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+    }
+    .chunk p:last-child { margin-bottom: 0; }
+    .chunk ul {
+      margin: 0 0 0 1.25rem;
+      padding: 0;
+      color: var(--text-secondary);
+      font-size: 0.9375rem;
+    }
+    .chunk li { margin-bottom: 0.5rem; }
+    .chunk li:last-child { margin-bottom: 0; }
+
+    /* —— How to use steps —— */
+    .steps {
+      display: grid;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .step {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--border);
+      justify-content: center;
     }
-    .page-header .logo {
-      width: 40px;
-      height: 40px;
-      object-fit: contain;
-      flex-shrink: 0;
+    .step-content strong { color: var(--text); font-weight: 600; }
+    .step-content p { margin: 0.25rem 0 0 0; font-size: 0.875rem; }
+
+    /* —— Try it chunk (becomes left panel when has-result) —— */
+    .try-it {
+      margin-top: 1.5rem;
     }
-    .page-header .brand {
+    .try-it .chunk-title { margin-bottom: 1rem; }
+    .backend-status { font-size: 0.8125rem; color: var(--muted); margin-bottom: 0.75rem; }
+    .backend-status.ok { color: var(--success); }
+    .backend-status.error { color: var(--error); }
+    .input-row { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .input-row label { font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
+    .row-inner { display: flex; gap: 0.5rem; }
+    input[type="text"] {
+      flex: 1;
       min-width: 0;
+      padding: 0.75rem 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      font-weight: 500;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .page-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.15rem 0; }
-    .page-header .tagline { color: var(--muted); font-size: 0.85rem; margin: 0; }
+    input[type="text"]::placeholder { color: var(--muted); }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .row-options { margin-top: 0.5rem; }
+    .row-options label { font-size: 0.875rem; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
+    input[type="checkbox"] { accent-color: var(--accent); }
+    button {
+      padding: 0.75rem 1.25rem;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    button:hover { opacity: 0.92; }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+    .message {
+      padding: 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      margin-top: 1rem;
+    }
+    .message.error { background: rgba(248, 81, 73, 0.12); border: 1px solid rgba(248, 81, 73, 0.4); color: #ff7b72; }
+    .message.loading { color: var(--muted); border: 1px solid var(--border); }
+
+    /* —— Two-column layout when result is shown —— */
     .main-layout {
+      display: block;
+      margin-top: 0;
+    }
+    .main-layout .content-inner {
+      display: block;
+    }
+    body.has-result .main-layout .content-inner {
       display: grid;
-      grid-template-columns: 1fr;
-      transition: grid-template-columns var(--transition-dur) ease;
-      min-height: calc(100vh - 120px);
-    }
-    body.has-result .main-layout {
       grid-template-columns: var(--left-col-width) 1fr;
+      gap: 0;
+      align-items: start;
+      max-width: none;
+      padding: 0 1.5rem 2rem;
+      margin: 0;
     }
-
-    .panel-left {
-      padding: 1.5rem;
+    body.has-result .main-layout .left-col {
+      position: sticky;
+      top: 1rem;
+      padding-right: 1.5rem;
       border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+    }
+    body.has-result .main-layout .right-col {
+      padding-left: 1.5rem;
       min-width: 0;
     }
     .panel-right {
-      padding: 1.5rem;
-      min-width: 0;
-      overflow-y: auto;
       opacity: 0;
       transition: opacity var(--transition-dur) ease;
     }
@@ -82,152 +235,168 @@
       animation: fadeIn 0.4s ease;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
+      from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .backend-status { font-size: 0.85rem; color: var(--muted); }
-    .backend-status.ok { color: var(--success); }
-    .backend-status.error { color: var(--error); }
-
-    .input-row { display: flex; flex-direction: column; gap: 0.5rem; }
-    .input-row .row-inner { display: flex; gap: 0.5rem; }
-    input[type="text"] {
-      flex: 1;
-      min-width: 0;
-      padding: 0.65rem 0.85rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-    }
-    input[type="text"]::placeholder { color: var(--muted); }
-    input[type="text"]:focus { outline: none; border-color: var(--accent); }
-    .row-options label { font-size: 0.85rem; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
-    input[type="checkbox"] { accent-color: var(--accent); }
-    button {
-      padding: 0.65rem 1rem;
-      font-family: inherit;
-      font-size: 0.9rem;
-      font-weight: 600;
-      background: var(--accent);
-      color: var(--bg);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    button:hover { opacity: 0.9; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .message {
-      padding: 1rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      white-space: pre-wrap;
-    }
-    .message.error { background: rgba(248, 81, 73, 0.15); border: 1px solid var(--error); color: #ff7b72; }
-    .message.loading { color: var(--muted); }
-
+    /* —— Result card —— */
     .result {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       overflow: hidden;
+      box-shadow: var(--shadow-lg);
     }
     .result section {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
     }
     .result section:last-child { border-bottom: none; }
     .result h3 {
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
+      font-weight: 700;
       color: var(--muted);
-      margin: 0 0 0.25rem 0;
+      margin: 0 0 0.35rem 0;
     }
     .result .section-desc {
-      font-size: 0.8rem;
+      font-size: 0.8125rem;
       color: var(--muted);
       margin: 0 0 0.5rem 0;
       line-height: 1.4;
     }
-    .result .summary { font-size: 1.05rem; }
+    .result .summary { font-size: 1.0625rem; font-weight: 600; color: var(--text); }
     .result .intent {
       display: inline-block;
-      padding: 0.25rem 0.5rem;
-      background: rgba(88, 166, 255, 0.2);
-      border-radius: 6px;
-      font-size: 0.85rem;
+      padding: 0.35rem 0.65rem;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 600;
     }
     .result .risk { color: var(--warning); }
-    .result .chain-info { font-size: 0.85rem; color: var(--muted); }
+    .result .chain-info { font-size: 0.875rem; color: var(--muted); }
     .result .chain-info span { margin-right: 1rem; }
-    .result .chain-info a { color: var(--accent); text-decoration: none; }
+    .result .chain-info a { color: var(--accent); text-decoration: none; font-weight: 500; }
     .result .chain-info a:hover { text-decoration: underline; }
     .result ul { margin: 0; padding-left: 1.25rem; font-size: 0.9rem; }
-    .result li { margin-bottom: 0.25rem; }
-    .result code, .result .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--muted); }
+    .result li { margin-bottom: 0.35rem; }
+    .result code, .result .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; color: var(--text-secondary); }
+    .result section.openrouter-crosscheck {
+      background: var(--bg-elevated);
+      border-left: 3px solid var(--accent);
+    }
+    .result section.openrouter-crosscheck p { margin-bottom: 0.75rem; }
+    .result section.openrouter-crosscheck p:last-child { margin-bottom: 0; }
 
+    /* —— Footer —— */
     .page-footer {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.8rem;
+      padding: 1.5rem 1.5rem;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.8125rem;
       color: var(--muted);
+      margin-top: 2rem;
+      background: var(--bg-elevated);
     }
     .page-footer .logo {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       object-fit: contain;
     }
 
-    @media (max-width: 640px) {
-      body.has-result .main-layout {
+    @media (max-width: 720px) {
+      body.has-result .main-layout .content-inner {
         grid-template-columns: 1fr;
+        padding: 0 1rem 1.5rem;
       }
-      body.has-result .panel-left {
+      body.has-result .main-layout .left-col {
+        position: static;
+        padding-right: 0;
         border-right: none;
         border-bottom: 1px solid var(--border);
+        padding-bottom: 1.5rem;
+        margin-bottom: 1rem;
       }
+      body.has-result .main-layout .right-col {
+        padding-left: 0;
+      }
+      .hero h1 { font-size: 1.5rem; }
+      .chunk { padding: 1.25rem 1.25rem; }
     }
   </style>
 </head>
 <body>
-  <header class="page-header">
-    <img src="logo.png" alt="SolanaTxPlain" class="logo" />
-    <div class="brand">
+  <header class="hero">
+    <div class="hero-inner">
+      <img src="logo.png" alt="SolanaTxPlain" class="logo" />
       <h1>SolanaTxPlain</h1>
-      <p class="tagline">Paste a Solana mainnet transaction hash → see what it did in plain English.</p>
+      <p class="tagline">Turn any Solana transaction into plain English — summary, wallet impact, fees, and risk.</p>
     </div>
   </header>
 
   <div class="main-layout">
-    <aside class="panel-left">
-      <p id="backendStatus" class="backend-status">Backend: checking…</p>
-      <div class="input-row">
-        <label for="hash" style="font-size: 0.8rem; color: var(--muted);">Transaction hash</label>
-        <div class="row-inner">
-          <input type="text" id="hash" placeholder="Paste hash here…" autocomplete="off" />
-          <button type="button" id="btn">Explain</button>
-        </div>
-      </div>
-      <div class="row-options">
-        <label><input type="checkbox" id="simpleMode" checked /> Simple mode (beginner-friendly)</label>
-      </div>
-      <div id="message" class="message" style="display: none;"></div>
-    </aside>
+    <div class="content content-inner">
+      <div class="left-col">
+        <section class="chunk" aria-labelledby="about-title">
+          <h2 id="about-title" class="chunk-title">About</h2>
+          <p><strong>SolanaTxPlain</strong> is an AI-powered explainer for Solana transactions. Explorers show raw data — logs, program IDs, balance deltas — which is hard to read. We fetch the transaction, parse it, and use AI to describe what actually happened in simple language.</p>
+          <p>You get a short summary, wallet impact (what went in and out), fees, programs used, and risk notes. Built for wallet users, beginners, and anyone who wants to understand a tx without reading the chain.</p>
+        </section>
 
-    <main class="panel-right">
-      <div id="result" class="result" style="display: none;"></div>
-    </main>
+        <section class="chunk" aria-labelledby="how-title">
+          <h2 id="how-title" class="chunk-title">How to use</h2>
+          <div class="steps">
+            <div class="step">
+              <span class="step-num">1</span>
+              <div class="step-content">
+                <strong>Paste a transaction hash</strong>
+                <p>Copy the signature from Solscan, your wallet, or any Solana explorer (mainnet).</p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">2</span>
+              <div class="step-content">
+                <strong>Click Explain</strong>
+                <p>We fetch the tx from the chain and send a structured summary to the AI.</p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">3</span>
+              <div class="step-content">
+                <strong>Read the explanation</strong>
+                <p>Check summary, wallet impact, fees, programs used, and risk notes in plain English.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="chunk try-it" aria-labelledby="try-title">
+          <h2 id="try-title" class="chunk-title">Try it</h2>
+          <p id="backendStatus" class="backend-status">Backend: checking…</p>
+          <div class="input-row">
+            <label for="hash">Transaction hash</label>
+            <div class="row-inner">
+              <input type="text" id="hash" placeholder="Paste mainnet tx signature…" autocomplete="off" />
+              <button type="button" id="btn">Explain</button>
+            </div>
+          </div>
+          <div class="row-options">
+            <label><input type="checkbox" id="simpleMode" checked /> Simple mode (beginner-friendly)</label>
+          </div>
+          <div id="message" class="message" style="display: none;"></div>
+        </section>
+      </div>
+
+      <div class="right-col panel-right">
+        <div id="result" class="result" style="display: none;"></div>
+      </div>
+    </div>
   </div>
 
   <footer class="page-footer">
@@ -322,6 +491,24 @@
         html += '<section><h3>Risk notes</h3><p class="section-desc">Anything unusual or worth double-checking (e.g. unknown programs, very high fees, or approval-style actions).</p><p class="risk">' + escapeHtml(sections.risk || 'No suspicious activity.') + '</p></section>';
       }
       html += '<section><h3>AI explanation</h3><p class="section-desc">A short plain-English breakdown of what happened and what you can infer from it.</p><p>' + escapeHtml(data.explanation || '—') + '</p></section>';
+
+      if (data.openrouter_summary || data.openrouter_explanation) {
+        html += '<section class="openrouter-crosscheck"><h3>Cross-check (OpenRouter)</h3>';
+        html += '<p class="section-desc">Same transaction explained via OpenRouter to help verify the explanation above.</p>';
+        if (data.openrouter_summary) {
+          html += '<p><strong>Summary:</strong> ' + escapeHtml(data.openrouter_summary) + '</p>';
+        }
+        if (data.openrouter_explanation) {
+          html += '<p><strong>Explanation:</strong> ' + escapeHtml(data.openrouter_explanation) + '</p>';
+        }
+        if (data.openrouter_intent) {
+          html += '<p><strong>Intent:</strong> <span class="intent">' + escapeHtml(data.openrouter_intent) + '</span></p>';
+        }
+        if (data.openrouter_risk) {
+          html += '<p><strong>Risk:</strong> <span class="risk">' + escapeHtml(data.openrouter_risk) + '</span></p>';
+        }
+        html += '</section>';
+      }
 
       resultEl.innerHTML = html;
     }

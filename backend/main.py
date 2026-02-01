@@ -105,8 +105,8 @@ async def explain(req: ExplainRequest):
             raise HTTPException(status_code=429, detail=msg)
         raise HTTPException(status_code=503, detail=msg)
 
-    # README API output: summary, intent, wallet_changes, fees, risk_flags, explanation (+ slot/block_time so we don't miss info)
-    return {
+    # README API output + openrouter cross-check when both Gemini and OpenRouter ran
+    out = {
         "summary": ai["summary"],
         "intent": ai["intent"],
         "wallet_changes": {
@@ -121,3 +121,10 @@ async def explain(req: ExplainRequest):
         "slot": parsed.get("slot"),
         "block_time": parsed.get("block_time"),
     }
+    if ai.get("openrouter_summary") is not None or ai.get("openrouter_explanation"):
+        out["openrouter_summary"] = ai.get("openrouter_summary")
+        out["openrouter_explanation"] = ai.get("openrouter_explanation")
+        out["openrouter_intent"] = ai.get("openrouter_intent")
+        out["openrouter_risk"] = ai.get("openrouter_risk")
+        out["openrouter_sections"] = ai.get("openrouter_sections", {})
+    return out
