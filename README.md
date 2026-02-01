@@ -155,7 +155,7 @@ Here are examples of some AI generated summaries from the live activity tab.
 
 <img width="1544" height="727" alt="image" src="https://github.com/user-attachments/assets/d096b712-eb1c-4c67-8a3d-5d427f41bbcd" />
 
-Looking at part of the original Solscan data.
+Looking at part of the original Solscan data BEFORE **SolanaTxPlain** 
 
 <img width="1605" height="888" alt="image" src="https://github.com/user-attachments/assets/27d55360-d160-44c8-9233-ea499e5a3c1c" />
 
